@@ -50,12 +50,13 @@ class Table(threading.Thread):
         order_id = OrderId.next()
         items = [random.choice(list(MENU.keys())) for _ in range(random.randint(1, 5))]
         max_wait_time = 1.3 * max(MENU[food_id]["preparation-time"] for food_id in items)
+        priority = sum(MENU[item]["preparation-time"] for item in items)
         order = {
             "order_id": order_id,
             "table_id": self.table_id,
             "waiter_id": None,
             "items": items,
-            "priority": None,
+            "priority": priority,
             "max_wait": max_wait_time,
             "pick_up_time": math.floor(time.time())
         }
