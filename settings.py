@@ -16,9 +16,10 @@ KITCHEN_PORT = 3000
 TIME_UNIT = 1  # s
 
 NR_OF_WAITERS = 4 # Default: 4
-NR_OF_TABLES = 3  # Default: 10
-TABLE_MINIMUM_WAITING_TIME = 5  # Default 2
-TABLE_MAXIMUM_WAITING_TIME = 10  # Default 4
+NR_OF_TABLES = 6  # Default: 10
+TABLE_MINIMUM_WAITING_TIME = 5
+TABLE_MAXIMUM_WAITING_TIME = 25
+WAITER_TIME_TO_POST_ORDER = 4
 
 MENU = {
     1: {
@@ -113,3 +114,6 @@ MENU = {
         "cooking-apparatus": "oven"
     }
 }
+
+def dining_hall_print(msg, color=COLORS.OKBLUE):
+    print(f'{color}|-- Dining Hall --->>> {msg}')
