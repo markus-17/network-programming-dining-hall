@@ -114,3 +114,6 @@ MENU = {
         "cooking-apparatus": "oven"
     }
 }
+
+def dining_hall_print(msg, color=COLORS.OKBLUE):
+    print(f'{color}|-- Dining Hall --->>> {msg}')
