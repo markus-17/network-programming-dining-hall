@@ -8,7 +8,7 @@ import itertools
 import requests
 from flask import Flask, request
 
-from settings import COLORS, KITCHEN_HOSTNAME, KITCHEN_PORT, NR_OF_TABLES, TABLE_MINIMUM_WAITING_TIME, TABLE_MAXIMUM_WAITING_TIME, TIME_UNIT, DINING_HALL_PORT, MENU, NR_OF_WAITERS
+from settings import COLORS, KITCHEN_HOSTNAME, KITCHEN_PORT, NR_OF_TABLES, TABLE_MINIMUM_WAITING_TIME, TABLE_MAXIMUM_WAITING_TIME, TIME_UNIT, DINING_HALL_PORT, MENU, NR_OF_WAITERS, WAITER_TIME_TO_POST_ORDER
 
 
 # Gloabl Variables
@@ -39,10 +39,10 @@ class Waiter(threading.Thread):
         while True:
             try:
                 prepared_order = self.__prepared_orders_queue.get(
-                    timeout=(3 * TIME_UNIT))
+                    timeout=(WAITER_TIME_TO_POST_ORDER * TIME_UNIT))
                 table_threads[prepared_order['table_id']].serve_order(prepared_order)
             except queue.Empty:
-                # there was no order to be served for 3 Time units, do nothing
+                # there was no order to be served for WAITER_TIME_TO_POST_ORDER Time units, do nothing
                 pass
 
             try:
@@ -74,6 +74,8 @@ class OrderId:
             OrderId.__value += 1
             return OrderId.__value
 
+from statistics import mean
+reviews = []
 
 class Table(threading.Thread):
     def __init__(self, table_id, *args, **kwargs):
@@ -97,17 +99,32 @@ class Table(threading.Thread):
             # The following line will block the thread until
             # the Waiter will put the prepared order in self.__prepared_orders_queue
             prepared_order = self.__prepared_orders_queue.get()
-            dining_hall_print(f'Table_{prepared_order["table_id"]} served by Waiter_{prepared_order["waiter_id"]} rated Order_{prepared_order["order_id"]} with NOT_COMPUTED stars.')
+            ratio = prepared_order['cooking_time'] / prepared_order['max_wait']
+            stars = 0
+            if ratio <= 1.4:
+                stars = 1
+            if ratio <= 1.3:
+                stars = 2
+            if ratio <= 1.2:
+                stars = 3
+            if ratio <= 1.1:
+                stars = 4
+            if ratio <= 1.0:
+                stars = 5
+            reviews.append(stars)
+            dining_hall_print(f'Table_{prepared_order["table_id"]} served by Waiter_{prepared_order["waiter_id"]} rated Order_{prepared_order["order_id"]} with {stars} stars (Average {mean(reviews)} stars)')
 
     def make_order(self):
         order_id = OrderId.next()
+        items = [random.choice(list(MENU.keys())) for _ in range(random.randint(1, 5))]
+        max_wait_time = 1.3 * max(MENU[food_id]["preparation-time"] for food_id in items)
         order = {
             "order_id": order_id,
             "table_id": self.table_id,
             "waiter_id": None,
-            "items": [random.choice(list(MENU.keys())) for _ in range(3)],
+            "items": items,
             "priority": None,
-            "max_wait": None,
+            "max_wait": max_wait_time,
             "pick_up_time": math.floor(time.time())
         }
         return order
